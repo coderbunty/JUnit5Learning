@@ -1,0 +1,126 @@
+https://junit.org/junit5/docs/current/user-guide/
+
+- JUnit is a unit testing framework for Java.
+
+- Unlike previous versions of JUnit (single module), JUnit 5 is composed of several different
+  modules from three different sub-projects.
+
+  JUnit 5 = JUnit Platform + JUnit Jupiter + JUnit Vintage
+
+- The JUnit Platform serves as a foundation for launching testing frameworks on the JVM.
+  It also defines the TestEngine API (interface) for developing a testing framework that runs on
+  the platform. (Developers are not going to interact with JUnit Platform).
+  (https://junit.org/junit5/docs/current/api/org.junit.platform.engine/org/junit/platform/engine/TestEngine.html)
+
+- JUnit Jupiter is the combination of the new programming model and extension model for writing
+  tests and extensions in JUnit 5. The Jupiter sub-project provides a TestEngine for running
+  Jupiter based tests on the platform.
+  Everything a developer is going to do or interact with Junit framework is through JUnit Jupiter.
+
+- JUnit Vintage provides a TestEngine for running JUnit 3 and JUnit 4 based tests on the platform.
+
+- JUnit 5 requires Java version >= 8.
+
+- Almost all major IDEs support JUnit 5. IDEs use the platform directly to run our tests.
+
+- Maven properties & dependencies for using JUnit
+
+<properties>
+    <junit.jupiter.version>5.6.2</junit.jupiter.version>        // jupiter version
+    <maven.compiler.source>8</maven.compiler.source>            // java source & target version
+    <maven.compiler.target>8</maven.compiler.target>
+  </properties>
+
+<dependencies>
+    <dependency>
+      <artifactId>junit-jupiter-engine</artifactId>           // jupiter engine as dependency (platform)
+      <groupId>org.junit.jupiter</groupId>
+      <scope>test</scope>                                     // don't include test in final build
+      <version>5.6.2</version>
+    </dependency>
+    <dependency>
+      <artifactId>junit-jupiter-api</artifactId>              // jupiter api as dependency
+      <groupId>org.junit.jupiter</groupId>
+      <scope>test</scope>
+      <version>5.6.2</version>
+    </dependency>
+  </dependencies>
+
+- @Test annotation marks a method as a test (method). => informs JUnit engine what methods to run.
+
+- If there are no failures in a unit test, then by default its a pass (no news is good news).
+
+- The test class which will test some other class in some package, will also be present in the same
+  package. This is so as to be able to test the protected & default methods of the class also.
+
+- org.junit.jupiter.api.Assertions provides lot of assert methods for asserting if our condition
+  passes or not.
+
+- There is a maven plugin (like clean, install, deploy etc) called 'surefire' which lets us run
+  JUnit tests using maven commands.
+  This is useful while running tests in CI/CD platform where we can run the tests using maven.
+
+  The surefire plugin can be invoked by calling the 'test' phase of the build cycle,
+  $ mvn test
+
+- Test life cycle
+
+  The test engine will first create an instance of the test class where our tests reside. The order
+  in which the test cases are run is random, so every test must be a standalone test, not depending
+  on any kind of state from other tests.
+
+  JUnit provides certain test lifecycle hooks which can be used for doing certain things pre & post
+  the unit test run. Below are the annotations provided by JUnit to run some piece of code before &
+  after running the unit tests.
+
+  @BeforeAll, @AfterAll, @BeforeEach & @AfterEach.
+
+  @BeforeAll & @AfterAll methods run even before the test class is initialized, so the methods with
+  these annotations must be static.
+
+  @BeforeEach & @AfterEach methods run before & after the execution of each unit test, they can be
+  static or instance methods.
+
+- By default, JUnit creates a new instance of the test class for every test method that it runs.
+  @TestInstance(TestInstance.Lifecycle.PER_METHOD) --> default
+  We can change the default behavior by adding the below annotation above the test class,
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+  On doing this, there is no need to have static method signature for @BeforeAll & @AfterAll
+  annotated methods. After creating the class instance also, these methods can be called once
+  before calling unit tests.
+
+- @Disabled - JUnit skips running this unit test
+
+- @RepeatedTest(#times) - is used to repeatedly execute a test a fixed number of times.
+
+  We can get the repetition info in the test from a argument of type RepetitionInfo.
+
+- Conditional execution of tests enabled us to execute the unit tests during only certain situations
+  or conditions. Below are some of the examples,
+
+  @EnabledOnOs(OS.LINUX)
+  @EnabledOnJre(JRE.JAVA_11)
+  @EnabledIf
+  @EnabledIfSystemProperty          // vm options
+  @EnabledIfEnvironmentVariable     // program arguments
+
+  We also have certain conditional execution constructs which can be used in code like,
+  Assumptions.assumeTrue(<boolean_expression>);
+  If the above evaluates to be true, only then run the unit test.
+
+  For example, Assumptions.assumeTrue(isServerUp);
+  Unit test will only run if the server was up & running.
+
+- Dependency injection is a technique in which an object receives other objects that it depends on.
+  These other objects are called dependencies.
+
+  We use an annotation & declare an argument to a method & have the framework passes it to us
+  (@RepeatedTest, RepetitionInfo rinfo). That's dependency injection.
+  In the above case the JUnit injects the dependency (RepetitionInfo) for us to use.
+
+  Similarly, we can have TestInfo & TestReporter (which JUnit maintains) to be used as unit test method
+  arguments, JUnit framework will inject the values for these arguments during runtime.
+  So, TestInfo & TestReporter are 2 dependency injected objects that we can access in our unit tests.
+  TestInfo - gives information about the present test
+  TestReporter - if we want to give/report some information out
+
